@@ -507,3 +507,5 @@ poetry.toml
 #jihye custom
 .idea/
 config/settings.py
+stdout.txt
+#chromedriver.exe

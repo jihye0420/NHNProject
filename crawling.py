@@ -3,6 +3,7 @@ import ssl
 import traceback
 import urllib.parse
 import urllib.request
+import re
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -12,100 +13,11 @@ import django
 
 django.setup()
 from nhn.models import Post
+
 # 파일 쓰기 (print문)
 import sys
 sys.stdout = open('stdout.txt', 'w', encoding='utf-8')
-# def fetch_clien_latest_data():
-#     result = []
-#
-#     url = 'https://www.clien.net/service/search/board/park?sk=title&sv=%EC%BF%A0%ED%8C%A1'
-#     response = requests.get(url)
-#     html = response.text
-#     soup = BeautifulSoup(html, 'html.parser')
-#
-#     web_page_link_root = "https://clien.net"
-#     list_items = soup.find_all("div", "list_item symph_row")
-#
-#     for item in list_items:
-#         # title
-#         title = item.find("span", "subject_fixed")["title"]
-#
-#         # link
-#         page_link_raw = web_page_link_root + item.find("div", "list_title").find("a")["href"]
-#         page_link_parts = urlparse(page_link_raw)
-#         normalized_page_link = page_link_parts.scheme + '://' + page_link_parts.hostname + page_link_parts.path
-#
-#         # specific id
-#         specific_id = page_link_parts.path.split('/')[-1]
-#
-#         item_obj = {
-#             'title': title,
-#             'link': normalized_page_link,
-#             'specific_id': specific_id,
-#         }
-#
-#         print(title)
-#         result.append(item_obj)
-#
-#     return result
-#
-# def add_new_items(crawled_items):
-#     last_inserted_items = BoardData.objects.last()
-#     if last_inserted_items is None:
-#         last_inserted_specific_id = ""
-#     else:
-#         last_inserted_specific_id = getattr(last_inserted_items, 'specific_id')
-#
-#     items_to_insert_into_db = []
-#     for item in crawled_items:
-#         if item['specific_id'] == last_inserted_specific_id:
-#             break
-#         items_to_insert_into_db.append(item)
-#     items_to_insert_into_db.reverse()
-#
-#     for item in items_to_insert_into_db:
-#         print("new item added!! : " + item['title'])
-#
-#         BoardData(specific_id=item['specific_id'],
-#                   title=item['title'],
-#                   link=item['link']).save()
-#
-#     return items_to_insert_into_db
-#
-#
-# if __name__ == '__main__':
-#     add_new_items(fetch_clien_latest_data())
 
-
-# def getRecipeCrawler(element):
-#     baseUrl = 'https://haemukja.com/recipes?sort=rlv&name='
-#     url = baseUrl + urllib.parse.quote_plus(element)
-#     html = urllib.request.urlopen(url, context=ssl._create_unverified_context()).read()
-#     soup = BeautifulSoup(html, 'html.parser')
-#
-#     result = []
-#     i = 0
-#     for anchor in soup.select('a.call_recipe > strong'):
-#         print(anchor.get_text())
-#         i += 1
-#
-#         recipe_obj = {
-#             'recipe_ID': i,
-#             'recipe_Name': anchor.get_text(),
-#             'ingredient_Key': element
-#         }
-#
-#         result.append(recipe_obj)
-#
-#     return result
-#
-#
-# # insert data into sqlite
-# if __name__ == '__main__':
-#     recipe_data = getRecipeCrawler("당근")
-#     for item in recipe_data:
-#         Search_Recipe(recipe_ID=item['recipe_ID'], recipe_Name=item['recipe_Name'],
-#                       ingredient_Key=item['ingredient_Key']).save()
 
 def get_driver():
     # 구글은 분당 4회이상 접근 허용하지 않기 때문에 sleep을 길게 준다.
@@ -116,11 +28,12 @@ def get_driver():
     driver = webdriver.Chrome()
     return driver
 
-
-def crawling_iam_school():
+# 아이엠스쿨 기관 프로필 크롤링 완료
+def crawling_iam_school(iam_school_url):
     result = []
     post_links = [] # 각 url 리스트
-    url = 'https://school.iamservice.net/organization/1674/group/2001892'
+    # url = 'https://school.iamservice.net/organization/1674/group/2001892'
+    url = iam_school_url
 
     # # bs으로는 파싱이 안되는 html 코드
     # response = requests.get(url)
@@ -157,6 +70,7 @@ def crawling_iam_school():
         for i in result:
             print("i: ", i)
         print(result)
+
     except Exception as ex:
         print("driver error: ", ex)
         print(traceback.format_exc())  # 에러스택 정보를 string으로 변환
@@ -185,10 +99,97 @@ def crawling_iam_school():
     # post_file_name = soup.find('div', attrs={'class': 'title'})
 
 
+def clean_text(text):
+    text = text.replace("\n", "")  # 공백 제거
+    text = text.replace('\u200b', '')
+    # text = re.sub('[a-zA-Z]', '', text)
+    # text = re.sub('[\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"]','', text)
+    return text
+
+# 네이버 블로그 크롤링 완료
+def crawling_naver_blog():
+    result = []
+    post_links = [] # 각 url 리스트
+    url = 'https://blog.naver.com/PostList.nhn?blogId=sntjdska123&from=postList&categoryNo=51'
+
+    try:
+        response = requests.get(url)
+        html = response.text
+        soup = BeautifulSoup(html, 'html.parser')
+        posts = soup.find('ul', attrs={'class':'thumblist'}).find_all('li', attrs={'class':'item'})
+
+        # url 링크
+        for post in posts:
+            post_links.append(post.find('a', attrs={'class': 'link pcol2'})['href'])
+        # print(post_links)
+
+        # 각 페이지 들어가서 반복할일!
+        for post_url in post_links:
+            url = 'https://blog.naver.com'+post_url
+            response = requests.get(url)
+            html = response.text
+            soup = BeautifulSoup(html, 'html.parser')
+            post_one_dict = {}
+            post_one_dict['title'] = soup.find('div', attrs={'class': 'pcol1'}).get_text().strip()
+
+            # todo: 선택 0) html text
+            body = soup.find('div', attrs={'class': 'se-main-container'}).get_text().strip()
+            body = clean_text(body)
+            # print(body)
+            post_one_dict['body'] = body
+            print("=============================================================================")
+
+
+            # todo: 선택1) html 본문 전체
+            # print("body: ", body)
+            # post_one_dict['body'] = body
+            # print("=============================================================================")
+
+
+            # todo: 선택2) html 본문 text **
+            # # post_text_pattern = re.compile(r'se-component se-text [\w]') # 대안
+            # # body = soup.find('div', attrs={'class': 'se-main-container'}).find_all('div', attrs={'class': post_text_pattern}) # 대안
+            # p_text_pattern = re.compile(r'se-text-paragraph [\w]') # **
+            # body = soup.find('div', attrs={'class': 'se-main-container'}).find_all('p', attrs={'class': p_text_pattern}) # **
+            #
+            # temp_body = ''
+            # for j in body:
+            #     # print(j.contents[0].find(text=True))
+            #     print(j.get_text())
+            #     temp_body += j.get_text()
+            #     temp_body = temp_body.replace('\u200b', '')
+            #     post_one_dict['body'] = temp_body
+            # print("=============================================================================")
+
+            # todo: url 형태 맞추기
+            post_one_dict['url'] = url
+            post_one_dict['published_date'] = soup.find('span', attrs={'class': 'se_publishDate pcol2'}).get_text()
+
+            # todo: 첨부파일이 있는 블로그 글 찾기
+            # files = post.find_all('span', attrs={'class': 'name'})
+            post_one_dict['attatched_file_title'] = []
+            # for f in files:
+            #     f = f.get_text()
+            #     post_one_dict['attatched_file_title'].append(f)
+            result.append(post_one_dict)
+
+        for i in result:
+            print("i: ", i)
+        print(result)
+
+    except Exception as ex:
+        print("driver error: ", ex)
+        print(traceback.format_exc())  # 에러스택 정보를 string으로 변환
+
+
 
 if __name__ == '__main__':
-    crawling_iam_school()
-    # 크롤링하는 로직
+    # iam_school_list = ['https://school.iamservice.net/organization/1674/group/2001892', 'https://school.iamservice.net/organization/19710/group/2091428']
+    # for iam_school in iam_school_list:
+    #     crawling_iam_school(iam_school)
+    # naver_blog_list = ['https://blog.naver.com/PostList.nhn?blogId=sntjdska123&from=postList&categoryNo=51']
+    crawling_naver_blog()
+
     # driver 설정하는 로직
     # DB insert 하는 로직 (중복 방지)
     # timezone (time추가)

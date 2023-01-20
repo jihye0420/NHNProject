@@ -508,4 +508,5 @@ poetry.toml
 .idea/
 config/settings.py
 stdout.txt
+stdout2.txt
 #chromedriver.exe

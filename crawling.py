@@ -21,8 +21,12 @@ import sys
 
 sys.stdout = open('stdout.txt', 'w', encoding='utf-8')
 
+
 # todo: 데이터 검증 작업 확인
 # todo: body 데이터 검증 확인
+# todo: 에러메시지 바꾸기
+
+
 def get_driver():
     # 구글은 분당 4회이상 접근 허용하지 않기 때문에 sleep을 길게 준다.
     # time.sleep(100)
@@ -53,13 +57,14 @@ def convert_to_date_utc(category, pub_date):
             pass
         elif category == 'bbc_news':
             pub_date = datetime.strptime(pub_date, '%a, %d %b %Y %H:%M:%S GMT')
+            pub_date = pub_date.astimezone(tz=pytz.utc)
             print('after', pub_date)
     # utc = kst - timedelta(hours=9)
     return pub_date
 
 
 def clean_text(text):
-    text = text.replace("\n", " ")  # 공백 제거
+    text = text.replace("\n", "")  # 공백 제거
     text = text.replace('\u200b', '')
     text = text.replace("\'", "\'")
     # text = re.sub(r"\'", "'", text)
@@ -151,10 +156,11 @@ def crawling_iam_school(iam_school_url):
 
 
 # 네이버 블로그 크롤링 완료
-def crawling_naver_blog():
+def crawling_naver_blog(naver_blog_url):
     result = []
     post_links = []  # 각 url 리스트
-    url = 'https://blog.naver.com/PostList.nhn?blogId=sntjdska123&from=postList&categoryNo=51'
+    # url = 'https://blog.naver.com/PostList.nhn?blogId=sntjdska123&from=postList&categoryNo=51'
+    url = naver_blog_url
 
     try:
         response = requests.get(url)
@@ -181,7 +187,7 @@ def crawling_naver_blog():
             body = clean_text(body)
             # print(body)
             post_one_dict['body'] = body
-            print("=============================================================================")
+            # print("=============================================================================")
 
             # todo: 선택1) html 본문 전체
             # print("body: ", body)
@@ -218,17 +224,17 @@ def crawling_naver_blog():
 
         for i in result:
             print("i: ", i)
-            print('======================================================')
         print(result)
+        return result
     except Exception as ex:
         print("driver error: ", ex)
         print(traceback.format_exc())  # 에러스택 정보를 string으로 변환
 
 
-def crawling_news():
+def crawling_news(news_url):
     result = []
     post_links = []  # 각 url 리스트
-    url = 'http://feeds.bbci.co.uk/news/rss.xml'
+    url = news_url
 
     try:
         response = requests.get(url)
@@ -266,8 +272,6 @@ def crawling_news():
             response = requests.get(post_one_dict['url'])
             page = response.text
             soup = BeautifulSoup(page, 'lxml')
-            print("Encoding method :", soup.original_encoding)
-
             body = soup.find('article').find_all('div', attrs={'data-component': 'text-block'})
             for b in body:
                 temp_body += b.get_text()
@@ -288,8 +292,8 @@ def crawling_news():
 
         for i in result:
             print("i: ", i)
-            print('==========================================================================')
         print(result)
+        return result
     except Exception as ex:
         print("driver error: ", ex)
         print(traceback.format_exc())  # 에러스택 정보를 string으로 변환
@@ -317,12 +321,15 @@ def insert_data_db(category, crawled_data_list):
 if __name__ == '__main__':
     iam_school_list = ['https://school.iamservice.net/organization/1674/group/2001892',
                        'https://school.iamservice.net/organization/19710/group/2091428']
-    for iam_school in iam_school_list:
-        print("시작")
-        insert_data_db(category='iam_school', crawled_data_list=crawling_iam_school(iam_school))
+    # for iam_school in iam_school_list:
+    #     print("시작")
+    #     insert_data_db(category='iam_school', crawled_data_list=crawling_iam_school(iam_school))
 
-    # naver_blog_list = ['https://blog.naver.com/PostList.nhn?blogId=sntjdska123&from=postList&categoryNo=51']
-    # crawling_naver_blog()
+    naver_blog_list = ['https://blog.naver.com/PostList.nhn?blogId=sntjdska123&from=postList&categoryNo=51',
+                       'https://blog.naver.com/PostList.nhn?blogId=hellopolicy&from=postList&categoryNo=168']
+    # for naver_blog in naver_blog_list:
+    #     print("시작")
+    #     insert_data_db(category='naver_blog', crawled_data_list=crawling_naver_blog(naver_blog))
 
-    # crawling_news()
-    # DB insert 하는 로직 (중복 방지)
+    news_url = 'http://feeds.bbci.co.uk/news/rss.xml'
+    insert_data_db(category='bbc_news', crawled_data_list=crawling_news(news_url))

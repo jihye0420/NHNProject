@@ -43,10 +43,10 @@ class PostView(APIView):
 
 
 # 게시물 조회
-# class PostViewSet(viewsets.ModelviewSet):
-#     query_set = Post.objects.all().order_by('-id')
-#     serializer_class = PostSerializer
-#     pagination_class = PostPagination
-#     return Response(Po)
+class PostViewSet(viewsets.ModelViewSet):
+    serializer_class = PostSerializer
+    pagination_class = PostPagination
+    queryset = Post.objects.filter(category='iam_school').order_by('-published_datetime')
+    # return Response(serializer.data)
 
 # Minxin, APIView generic

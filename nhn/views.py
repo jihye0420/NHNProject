@@ -49,3 +49,4 @@ class PostView(APIView):
 #     pagination_class = PostPagination
 #     return Response(Po)
 
+# Minxin, APIView generic

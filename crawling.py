@@ -16,13 +16,13 @@ import django
 django.setup()
 
 from nhn.models import Post
-
 # 파일 쓰기 (print문)
 import sys
 
 sys.stdout = open('stdout.txt', 'w', encoding='utf-8')
 
-
+# todo: 데이터 검증 작업 확인
+# todo: body 데이터 검증 확인
 def get_driver():
     # 구글은 분당 4회이상 접근 허용하지 않기 때문에 sleep을 길게 준다.
     # time.sleep(100)
@@ -296,28 +296,21 @@ def crawling_news():
 
 
 def insert_data_db(category, crawled_data_list):
-    # Post.objects.all()
-    item = crawled_data_list[0]
-    # for item in crawled_data_list:
-    #     print("item", item)
-        # print("item['url']", item['url'] + '  ' + str(type(item['url'])))
-        # print("item['title']", item['title'] + '  ' + str(type(item['title'])))
-        # # print("item['published_datetime']", item['published_datetime'] + '  ' + str(type(item['published_datetime'])))
-        # print("item['body']", item['body'] + '  ' + str(type(item['body'])))
-        # print("item['attachment_list']", ",".join(item['attachment_list']) + '  ' + str(type(",".join(item['attachment_list']))))
-        # print("category", category)
-
-    # if type(item[''])
-
-    Post(url=item['url'],
-         title=item['title'],
-         published_datetime=item['published_datetime'],
-         body=str(item['body']),
-         attachment_list=",".join(item['attachment_list']),
-         category=category).save()
-        # category=category).save()
-
-        # return
+    # item = crawled_data_list[0]
+    for item in crawled_data_list:
+        print("item", item)
+        if Post.objects.filter(category=category, url=item['url'], title=item['title']).exists():
+            print('중복')
+            print(Post.objects.filter(category=category, url=item['url'], title=item['title']).first())
+            continue
+        else:
+            print('insert')
+            Post(url=item['url'],
+                 title=item['title'],
+                 published_datetime=item['published_datetime'],
+                 body=str(item['body']),
+                 attachment_list=",".join(item['attachment_list']),
+                 category=category).save()
     return
 
 

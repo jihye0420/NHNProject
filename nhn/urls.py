@@ -3,13 +3,12 @@ from rest_framework import routers
 
 from . import views
 
-router = routers.SimpleRouter()
-router.register('group', views.PostViewSet, basename='Post')
+# router = routers.SimpleRouter()
+# router.register('group', views.PostViewSet, basename='Post')
 
 # urlpatterns = router.urls
 urlpatterns = [
-#     # path('', views.test),
-#     # path('group/', views.PostView.as_view()),  # 게시물
-#     # path('group/', views.PostViewSet),  # 게시물
-    path('', include(router.urls)),
+    path('', views.test),
+    path('group/10', views.PostView.as_view()),  # 게시물
+#     path('', include(router.urls)),
 ]

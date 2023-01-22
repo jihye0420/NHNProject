@@ -25,6 +25,7 @@ sys.stdout = open('stdout.txt', 'w', encoding='utf-8')
 # todo: 데이터 검증 작업 확인
 # todo: body 데이터 검증 확인
 # todo: 에러메시지 바꾸기
+# todo: 카테고리 수정
 
 
 def get_driver():

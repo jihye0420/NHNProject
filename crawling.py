@@ -76,7 +76,7 @@ def get_driver():
     # local chrome path
     # path = "/usr/share/AISpera/merge_crawler/chromedriver"  # >> 나의 로컬 환경:/homejhhwang/updateWork/PIT/chromedriver vs 서버 환경:/usr/share/AISpera/google_news/chromedriver"
     chrome_options = Options()
-    # chrome_options.add_argument("--headless")
+    # chrome_options.add_argument("headless")
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     return driver
 

@@ -40,7 +40,6 @@ class PostView(APIView):
                 result = PostSerializer(query_set, many=True).data
                 # res.append(result) # todo: 출력 형식 [[], [], [], ...]
                 res += result  # todo: 출력 형식 [{}, {}, ...]
-                print(res)
             return Response(res)
         except:
             print(traceback.print_exc())

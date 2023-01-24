@@ -77,7 +77,7 @@ $ (.venv)$ pip install -r requirements.txt
 
 # 설명
 
-1. 크롬 드라이버 설정 ⇒ 설치하지 않아도 되는 코드를 작성했다.
+1. 크롬 드라이버 설정 ⇒ 셀레니움의 Service 를 이용해 현재 os에 설치된 크롬 브라우저를 사용하도록 수정하여 크롬 드라이버를 미리 설치하지 않아도 되는 코드를 작성했다.
     
     ```python
     def get_driver():
@@ -134,5 +134,7 @@ $ (.venv)$ pip install -r requirements.txt
         return pub_date
     ```
     
-4. DB 구조 설정
+4. DB 구조 설정 ⇒ category에 수집되는 url(사이트)가 있다.
 ![image](https://user-images.githubusercontent.com/50284754/214227556-17153733-10d8-4211-ae8d-0134c3c1798c.png)
+
+5. selenium을 사용한 이유 ⇒ 아이엠스쿨은 사이트는 BeautifulSoup으로는 데이터를 가지고 올 수 없어 selenium을 사용하였다.

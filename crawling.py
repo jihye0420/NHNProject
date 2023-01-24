@@ -25,36 +25,22 @@ import sys
 sys.stdout = open('stdout.txt', 'w', encoding='utf-8')
 
 
-# todo: 데이터 검증 작업 확인
-# todo: body 데이터 검증 확인
-# db insert 확인
-# 출력문 확인
-# 리드미 작성
-# 한번 실행해보기
-
 def convert_to_date_utc(category, pub_date):
     if type(pub_date) == str:
         if category == 'iam_school':
             pub_date = datetime.strptime(pub_date, '%Y.%m.%d')  # 문자열을 출력
-            print('pub_date: ', pub_date)
             kst = pytz.timezone('Asia/Seoul')
             kst_time = kst.localize(pub_date)
             pub_date = kst_time.astimezone(pytz.utc)
-            print('after: ', pub_date)
         elif category == 'naver_blog':
             pub_date = datetime.strptime(pub_date, '%Y. %m. %d. %H:%M')  # 문자열을 출력
-            print('pub_date: ', pub_date)
             kst = pytz.timezone('Asia/Seoul')
             kst_time = kst.localize(pub_date)
             pub_date = kst_time.astimezone(pytz.utc)
-            print('after: ', pub_date)
         elif category == 'bbc_news':
             pub_date = datetime.strptime(pub_date, '%a, %d %b %Y %H:%M:%S %Z')
-            print('pub_date: ', pub_date)
             utc = pytz.timezone('UTC')
             pub_date = utc.localize(pub_date)
-            # pub_date = pub_date.replace(tz=pytz.utc)
-            print('after: ', pub_date)
     return pub_date
 
 
@@ -73,8 +59,6 @@ def get_driver():
     # 구글은 분당 4회이상 접근 허용하지 않기 때문에 sleep을 길게 준다.
     # time.sleep(2)
 
-    # local chrome path
-    # path = "/usr/share/AISpera/merge_crawler/chromedriver"  # >> 나의 로컬 환경:/homejhhwang/updateWork/PIT/chromedriver vs 서버 환경:/usr/share/AISpera/google_news/chromedriver"
     chrome_options = Options()
     # chrome_options.add_argument("headless")
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
@@ -120,9 +104,6 @@ def crawling_iam_school(iam_school_url):
                 temp_body += str(j)
             post_one_dict['body'] = temp_body
             result.append(post_one_dict)
-
-        # for i in result:
-        #     print("i: ", i)
         return result
     except Exception as ex:
         print("error: ", ex)
@@ -188,9 +169,6 @@ def crawling_naver_blog(naver_blog_url):
             #     f = f.get_text()
             #     post_one_dict['attachment_list'].append(f)
             result.append(post_one_dict)
-
-        # for i in result:
-        #     print("i: ", i)
         return result
     except Exception as ex:
         print("error: ", ex)
@@ -233,8 +211,6 @@ def crawling_news(news_url):
             #     temp_body += b.get_text()
             post_one_dict['body'] = clean_text(temp_body)
             result.append(post_one_dict)
-        # for i in result:
-        #     # print("i: ", i)
         return result
     except Exception as ex:
         print("error: ", ex)
@@ -295,12 +271,9 @@ if __name__ == '__main__':
         print("시작")
         if 'iamservice' in crawling_url:
             result_list = crawling_iam_school(crawling_url)
-            print(result_list)
         elif 'naver' in crawling_url:
             result_list = crawling_naver_blog(crawling_url)
-            print(result_list)
         elif 'bbci' in crawling_url:
             result_list = crawling_news(crawling_url)
-            print(result_list)
         insert_data_db(category=crawling_url, crawled_data_list=result_list)
         time.sleep(1)

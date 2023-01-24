@@ -4,6 +4,8 @@ from nhn.models import Post
 
 
 def string_to_list(string):
+    if string == "":
+        return []
     return string.split(',')
 
 

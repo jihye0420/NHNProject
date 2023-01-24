@@ -28,8 +28,6 @@ class PostView(APIView):
     def get(self, request):
         try:
             res = []
-            # todo: 10개 게시물만 가져오기!
-            # todo: 카테고리 수정
             crawling_url_list = [
                 'https://school.iamservice.net/organization/1674/group/2001892',
                 'https://school.iamservice.net/organization/19710/group/2091428',
@@ -40,7 +38,6 @@ class PostView(APIView):
             for category in crawling_url_list:
                 query_set = Post.objects.filter(category=category).order_by('-published_datetime')[:10]
                 result = PostSerializer(query_set, many=True).data
-                # res.append(list(result))
                 # res.append(result) # todo: 출력 형식 [[], [], [], ...]
                 res += result  # todo: 출력 형식 [{}, {}, ...]
                 print(res)

@@ -3,7 +3,7 @@ nhn 사전 과제
 
 # Install
 - [Python 3.10.6](https://www.python.org/downloads/release/python-3106/)
-- [SQLite3](https://sqlitebrowser.org/dl/)
+- [SQLite3](https://sqlitebrowser.org/dl/) (SQLite GUI 도구이므로 필수 설치x)
 
 # Requirements
 ```bash
@@ -31,7 +31,7 @@ $ git clone https://github.com/jihye0420/NHNProject.git
 
 # 가상환경 생성
 $ cd NHNProject
-$ python - venv .venv
+$ python -m venv .venv
 
 # 가상환경 활성화
 $ source .venv/bin/activate  # 맥

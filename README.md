@@ -568,24 +568,18 @@ $ (.venv)$ pip install -r requirements.txt
         if type(pub_date) == str:
             if category == 'iam_school':
                 pub_date = datetime.strptime(pub_date, '%Y.%m.%d')  # 문자열을 출력
-                print('pub_date: ', pub_date)
                 kst = pytz.timezone('Asia/Seoul')
                 kst_time = kst.localize(pub_date)
                 pub_date = kst_time.astimezone(pytz.utc)
-                print('after: ', pub_date)
             elif category == 'naver_blog':
                 pub_date = datetime.strptime(pub_date, '%Y. %m. %d. %H:%M')  # 문자열을 출력
-                print('pub_date: ', pub_date)
                 kst = pytz.timezone('Asia/Seoul')
                 kst_time = kst.localize(pub_date)
                 pub_date = kst_time.astimezone(pytz.utc)
-                print('after: ', pub_date)
             elif category == 'bbc_news':
                 pub_date = datetime.strptime(pub_date, '%a, %d %b %Y %H:%M:%S %Z')
-                print('pub_date: ', pub_date)
                 utc = pytz.timezone('UTC')
                 pub_date = utc.localize(pub_date)
-                print('after: ', pub_date)
         return pub_date
     ```
     

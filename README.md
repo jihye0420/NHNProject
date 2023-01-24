@@ -31,7 +31,7 @@ $ git clone https://github.com/jihye0420/NHNProject.git
 
 # 가상환경 생성
 $ cd NHNProject
-$ python venv .venv
+$ python - venv .venv
 
 # 가상환경 활성화
 $ source .venv/bin/activate  # 맥

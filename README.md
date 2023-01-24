@@ -27,7 +27,7 @@ webdriver-manager    3.8.5
 # 파이썬 설치 필수
 
 # git clone
-$ git clone https://github.com/jihye0420/NHNProject.git <프로젝트 이름>
+$ git clone https://github.com/jihye0420/NHNProject.git
 
 # 가상환경 생성
 $ cd NHNProject

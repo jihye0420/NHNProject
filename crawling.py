@@ -25,6 +25,75 @@ import sys
 sys.stdout = open('stdout.txt', 'w', encoding='utf-8')
 
 
+class Crawler:
+
+    def __init__(self, url, crawling_type='lxml', posts=[], title='', published_datetime=datetime.now(),
+                 attachment_list=[],
+                 body='',
+                 category=''):
+        self.title = title
+        self.url = url
+        self.published_datetime = published_datetime
+        self.attachment_list = attachment_list
+        self.body = body
+        self.category = category
+        self.crawling_type = crawling_type
+        self.posts = posts
+        self.set_up()
+
+    def set_up(self):
+        response = requests.get(self.url)
+        page = response.text
+        soup = BeautifulSoup(page, self.crawling_type)
+        posts = soup.find_all('item')
+        self.posts
+
+    # def __init__(self, title, url, published_datetime, attachment_list, body, category):
+    #     self.title = title
+    #     self.url = url
+    #     self.published_datetime = published_datetime
+    #     self.attachment_list = attachment_list
+    #     self.body = body
+    #     self.category = category
+
+    def crawling_data(self):
+        result = []
+        post_links = []  # 각 url 리스트
+        try:
+            # 각 페이지 들어가서 반복할일!
+            for post_url in post_links:
+                url = 'https://blog.naver.com' + post_url
+                response = requests.get(url)
+                html = response.text
+                soup = BeautifulSoup(html, 'lxml')
+                post_one_dict = {}
+                post_one_dict['title'] = soup.find('div', attrs={'class': 'pcol1'}).get_text().strip()
+
+                p_text_pattern = re.compile(r'se-text-paragraph [\w]')  # **
+                body = soup.find('div', attrs={'class': 'se-main-container'}).find_all('p', attrs={
+                    'class': p_text_pattern})  # **
+                temp_body = ''
+                for j in body:
+                    if j.get_text() == '\u200b':
+                        continue
+                    else:
+                        temp_body += str(j.contents[0])
+                post_one_dict['body'] = temp_body
+
+                post_one_dict['url'] = url
+                post_one_dict['published_datetime'] = convert_to_date_utc('naver_blog', soup.find('span', attrs={
+                    'class': 'se_publishDate pcol2'}).get_text())
+
+                # todo: 첨부파일이 있는 블로그 글 찾기
+                post_one_dict['attachment_list'] = []
+                result.append(post_one_dict)
+            return result
+        except Exception as ex:
+            print("error: ", ex)
+            print(traceback.format_exc())  # 에러스택 정보를 string으로 변환
+            return None
+
+
 def convert_to_date_utc(category, pub_date):
     if type(pub_date) == str:
         if category == 'iam_school':
@@ -48,10 +117,7 @@ def clean_text(text):
     text = text.replace("\n", "")  # 공백 제거
     text = text.replace('\u200b', '')
     text = text.replace("\'", "'")
-    # text = re.sub(r"\'", "'", text)
     text = re.sub(r"â\x80¦", "...", text)
-    # text = re.sub('[a-zA-Z]', '', text)
-    # text = re.sub('[\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"]','', text)
     return text
 
 
@@ -60,7 +126,6 @@ def get_driver():
     # time.sleep(2)
 
     chrome_options = Options()
-    # chrome_options.add_argument("headless")
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     return driver
 
@@ -69,13 +134,6 @@ def get_driver():
 def crawling_iam_school(iam_school_url):
     result = []
     url = iam_school_url
-
-    # # bs으로는 파싱이 안되는 html 코드
-    # response = requests.get(url)
-    # html = response.text
-    # soup = BeautifulSoup(html, 'lxml')
-    # links = soup.find_all('a', attrs={'class':'btn_detail'}) # a 요소 태그 다 추출
-    # print(links)
 
     try:
         driver = get_driver()
@@ -136,17 +194,6 @@ def crawling_naver_blog(naver_blog_url):
             post_one_dict = {}
             post_one_dict['title'] = soup.find('div', attrs={'class': 'pcol1'}).get_text().strip()
 
-            # todo: 선택 0) html text **
-            # body = soup.find('div', attrs={'class': 'se-main-container'}).get_text().strip()
-            # body = clean_text(body)
-            # post_one_dict['body'] = body
-
-            # todo: 선택1) html 본문 전체
-            # print("body: ", body)
-            # post_one_dict['body'] = body
-            # print("=============================================================================")
-
-            # todo: 선택2) html 본문 text **
             p_text_pattern = re.compile(r'se-text-paragraph [\w]')  # **
             body = soup.find('div', attrs={'class': 'se-main-container'}).find_all('p', attrs={
                 'class': p_text_pattern})  # **
@@ -164,10 +211,6 @@ def crawling_naver_blog(naver_blog_url):
 
             # todo: 첨부파일이 있는 블로그 글 찾기
             post_one_dict['attachment_list'] = []
-            # files = post.find_all('span', attrs={'class': 'name'})
-            # for f in files:
-            #     f = f.get_text()
-            #     post_one_dict['attachment_list'].append(f)
             result.append(post_one_dict)
         return result
     except Exception as ex:
@@ -195,20 +238,12 @@ def crawling_news(news_url):
             post_one_dict['title'] = post.find('title').get_text()
             post_one_dict['published_datetime'] = convert_to_date_utc('bbc_news', post.find('pubDate').get_text())
             post_one_dict['attachment_list'] = []
-            # files = post.find_all('span', attrs={'class': 'name'})
-            # for f in files:
-            #     f = f.get_text()
-            #     post_one_dict['attachment_list'].append(f)
-            # # print(post_one_dict['attachment_list'])
             response = requests.get(post_one_dict['url'])
             page = response.text
             soup = BeautifulSoup(page, 'lxml')
             body = soup.find('article').find_all('div', attrs={'data-component': 'text-block'})
             for j in body:
                 temp_body += str(j.find('p'))
-            # todo: text만
-            # for b in body:
-            #     temp_body += b.get_text()
             post_one_dict['body'] = clean_text(temp_body)
             result.append(post_one_dict)
         return result
@@ -238,26 +273,6 @@ def insert_data_db(category, crawled_data_list):
 
 
 if __name__ == '__main__':
-    # iam_school_list = ['https://school.iamservice.net/organization/1674/group/2001892',
-    #                    'https://school.iamservice.net/organization/19710/group/2091428']
-    # # iam_school_list = ['https://school.iamservice.net/organization/1674/group/2001892']
-    # for iam_school in iam_school_list:
-    #     print("시작")
-    #     # crawling_iam_school(iam_school)
-    #     insert_data_db(category=iam_school, crawled_data_list=crawling_iam_school(iam_school))
-    # 
-    # naver_blog_list = ['https://blog.naver.com/PostList.nhn?blogId=sntjdska123&from=postList&categoryNo=51',
-    #                    'https://blog.naver.com/PostList.nhn?blogId=hellopolicy&from=postList&categoryNo=168']
-    # # naver_blog_list = ['https://blog.naver.com/PostList.nhn?blogId=sntjdska123&from=postList&categoryNo=51']
-    # for naver_blog in naver_blog_list:
-    #     print("시작")
-    #     # crawling_naver_blog(naver_blog)
-    #     insert_data_db(category=naver_blog, crawled_data_list=crawling_naver_blog(naver_blog))
-    # 
-    # news_url = 'http://feeds.bbci.co.uk/news/rss.xml'
-    # # crawling_news(news_url)
-    # insert_data_db(category=news_url, crawled_data_list=crawling_news(news_url))
-
     # 전체 크롤링
     crawling_url_list = [
         'https://school.iamservice.net/organization/1674/group/2001892',

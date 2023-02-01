@@ -508,4 +508,4 @@ poetry.toml
 .idea/
 stdout.txt
 stdout2.txt
-#chromedriver.exe
+chromedriver.exe
